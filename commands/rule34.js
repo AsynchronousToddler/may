@@ -1,13 +1,35 @@
 const cooldown = require('../functions/cooldown.js');
 const snekfetch = require('snekfetch');
 const xml2js = require('xml2js');
-// TODO: Beautify a bit
-// TODO: Add database check if channel is nsfw also make a make channel nsfw command
+const URL = require('url);
+
+//Settings
+const COOLDOWN_PERIOD = 60;
+const MIN_BODY_LENGTH = 75;
+                    
 exports.run = async(client, msg, args) => {
-    if (cooldown(msg, 'rule34', 60, 'This command has a cooldown of **1 Minute**!')) {
-        if (!args.join(' ')) return msg.channel.send("Please give a search terms!");
-        snekfetch.get('http://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=' + args.join(' ')).then(r => {
-            if (r.body.length < 75) return msg.channel.send(":x: Nothing found!");
+    if(!msg.channel.nsfw) {
+        return msg.reply(':x: This channel isn\'t marked nsfw.');
+    }
+    
+    if (cooldown(msg, 'rule34', COOLDOWN_PERIOD, 'This command has a cooldown of **1 Minute**!')) {
+        if (args.length < 1) {
+            return msg.channel.send("Please give a search terms!");
+        }
+        
+        //Let node's own internal URL api handle query building and url encoding
+        let urlObject = URL.parse('http://rule34.xxx/index.php?page=dapi&s=post&q=index', true);
+        let tags = args.join(' ');
+    
+        urlObject.query.tags = tags;
+    
+        let url = URL.format(urlObject);
+        
+        snekfetch.get(url).then(r => {
+            if (r.body.length < MIN_BODY_LENGTH) {
+                return msg.channel.send(":x: Nothing found!");
+            }
+            
             xml2js.parseString(r.body, (err, reply) => {
                 if (err) {
                     return msg.channel.send('The API returned an unconventional response. :thinking:')
@@ -19,12 +41,12 @@ exports.run = async(client, msg, args) => {
         })
     }
 };
-// TODO: Add real stuff to the help I am too lazy rn
+
 exports.help = {
     category   : 'fun',
     usage      : false,
-    description: 'I will reply with pong fast as possible',
-    detail     : 'When using ping the bot will display you the response time in ms',
+    description: 'I will reply with rule 34 content of your chosing',
+    detail     : 'When using this, the bot will look up all of that pants rocking rule 34 content you can imagine',
     botPerm    : ['SEND_MESSAGES'],
     authorPerm : [],
     alias      : [
