@@ -8,10 +8,8 @@ const COOLDOWN_PERIOD = 60;
 const MIN_BODY_LENGTH = 75;
                     
 exports.run = async(client, msg, args) => {
-    if(!msg.channel.nsfw) {
-        return msg.reply(':x: This channel isn\'t marked nsfw.');
-    }
-    
+    //TODO: Add database based check for NSFW channel
+  
     if (cooldown(msg, 'rule34', COOLDOWN_PERIOD, 'This command has a cooldown of **1 Minute**!')) {
         if (args.length < 1) {
             return msg.channel.send("Please give a search terms!");
